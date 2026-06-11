@@ -1,64 +1,62 @@
 # Everything Media — Cinematic Scroll Film Website
 
 A single-page storytelling website where each scroll section is a film chapter.
-The background is a living "wet paint" WebGL field that bleeds between chapter
-palettes as you scroll, and stirs around the cursor like a brush in water.
+A living "wet paint" WebGL background bleeds between chapter palettes as you
+scroll and stirs around your cursor like a brush in water. A slate HUD runs a
+24fps timecode driven by scroll.
 
-## Stack
+## Why one file?
 
-| Layer | Tool | Loaded via |
-|---|---|---|
-| Painted background | Three.js (custom GLSL shader) | CDN |
-| Scene animations | GSAP 3 + ScrollTrigger | CDN |
-| Smooth scroll | Lenis | CDN |
-| Fonts | Marcellus · Archivo · IBM Plex Mono | Google Fonts |
+**The entire website — design, animations, shader, smooth scroll — lives inside
+`index.html`.** All CSS and JavaScript are inlined. There are no folders and no
+local file paths, so it cannot break from upload structure, missing files, or
+wrong directories. The only external loads are CDN libraries (Three.js, GSAP,
+Lenis) and Google Fonts — and every one of them is guarded: if any fails, the
+site still renders fully designed with all content visible.
 
-No build step. No npm. Pure static files — host anywhere.
-
-## File structure
+## Files
 
 ```
-everything-media/
-├── index.html        # all content & chapter structure
-├── css/
-│   └── style.css     # design tokens, type, layout, responsive, a11y
-├── js/
-│   ├── background.js # Three.js paint shader + palette bleeding
-│   └── main.js       # Lenis + GSAP ScrollTrigger + loader + HUD
-└── README.md
+index.html    ← the complete website (this is everything)
+vercel.json   ← optional Vercel config
+README.md     ← this file
 ```
+
+## How to view it right now
+
+Double-click `index.html`. It opens in your browser and works
+(internet needed for fonts and animation libraries).
 
 ## Deploy
 
 ### Vercel (recommended)
-1. Push this folder to a GitHub repository (all files at the repo root).
-2. Go to vercel.com → **Add New Project** → import the repo.
-3. Framework preset: **Other**. No build command, no output directory needed.
-4. Deploy. Done — it's a static site.
+1. Create a GitHub repository. Upload `index.html`, `vercel.json`, `README.md`
+   at the **root** of the repo (no folders).
+2. vercel.com → **Add New Project** → import the repo.
+3. Framework preset: **Other**. No build command. Deploy.
 
 ### Netlify
-Drag the whole folder into app.netlify.com/drop. That's it.
+Drag the folder onto app.netlify.com/drop.
 
 ### GitHub Pages
-Repo → Settings → Pages → Source: `main` branch, root folder.
+Repo → Settings → Pages → Source: `main` branch, root.
 
-## Customizing
+## Customizing (everything is inside index.html)
 
-- **Copy** — everything is plain text in `index.html`.
-- **Contact email** — search for `hello@everythingmedia.studio` and replace
-  (appears twice: the CTA button and the credits footer).
-- **Chapter colors** — edit `PALETTES` in `js/background.js`
-  and the matching `ACCENTS` array in `js/main.js`. Keep both in the same order:
-  `[prologue, craft, machine, work, studio, credits]`.
-- **Runtime / timecode** — `RUNTIME_FRAMES` in `js/main.js`
-  (currently a fictional 4-minute film at 24fps).
-- **Scroll feel** — Lenis `duration` in `js/main.js` (higher = floatier).
+| What | Where in index.html |
+|---|---|
+| All copy / text | The `<main>` section — plain HTML text |
+| Contact email | Search `hello@everythingmedia.studio` (2 places) |
+| Chapter colors | `PALETTES` array (paint) + `ACCENTS` array (UI) — keep the same order |
+| Timecode runtime | `RUNTIME_FRAMES` (currently 4 min @ 24fps) |
+| Scroll feel | Lenis `duration` (higher = floatier) |
 
-## Accessibility & fallbacks
+## Built-in safeguards
 
-- `prefers-reduced-motion`: smooth scroll and entrance animations are disabled,
-  all content is visible immediately, and the paint field slows to a near-still.
-- If WebGL is unavailable, the canvas hides and a solid ink background takes over.
-- Visible keyboard focus styles; semantic headings throughout.
+- **No WebGL?** Canvas hides, solid ink background takes over.
+- **CDN blocked?** Content fully styled and visible, just without motion.
+- **Reduced motion preference?** Animations off, everything visible instantly.
+- **Slow load?** Loader force-opens after 3.5s — nobody gets trapped.
+- Responsive to mobile, visible keyboard focus, semantic headings.
 
 © 2026 Everything Media

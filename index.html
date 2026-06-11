@@ -1,223 +1,904 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Everything Media — A Cinematic AI Production Studio</title>
-  <meta name="description" content="Everything Media is a cinematic AI production studio. Brand films, motion & VFX, music videos and trailers — directed with a hundred years of Indian filmmaking craft, built at machine speed." />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Everything Media — A Cinematic AI Production Studio</title>
+<meta name="description" content="Everything Media is a cinematic AI production studio. Brand films, motion & VFX, music videos and trailers — directed with a hundred years of Indian filmmaking craft, built at machine speed." />
+<meta property="og:title" content="Everything Media — A Cinematic AI Production Studio" />
+<meta property="og:description" content="Every great film begins in the dark. Scroll to roll camera." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#07070c" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2307070c'/%3E%3Ctext x='50' y='68' font-family='Georgia' font-size='52' fill='%23f2ede4' text-anchor='middle'%3EEM%3C/text%3E%3C/svg%3E" />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="Everything Media — A Cinematic AI Production Studio" />
-  <meta property="og:description" content="Every great film begins in the dark. Scroll to roll camera." />
-  <meta property="og:type" content="website" />
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Archivo:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Archivo:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ==========================================================================
+   EVERYTHING MEDIA — cinematic scroll film  (all styles inline, nothing external)
+   Display: Marcellus · Body: Archivo · Utility: IBM Plex Mono
+   ========================================================================== */
 
-  <link rel="stylesheet" href="css/style.css" />
+:root {
+  --accent: #f2ede4;            /* driven per-chapter by JS */
+  --ink: #07070c;
+  --paper: #f2ede4;
+  --paper-dim: rgba(242, 237, 228, 0.62);
+  --hairline: rgba(242, 237, 228, 0.14);
+
+  --font-display: "Marcellus", Georgia, serif;
+  --font-body: "Archivo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --space: clamp(1.25rem, 3vw, 2.5rem);
+  --max: 72rem;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: auto; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+body {
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--paper);
+  background: var(--ink);          /* fallback if WebGL is unavailable */
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--accent); color: var(--ink); }
+
+a { color: inherit; }
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  font-weight: 400;
+}
+
+/* ---------- paint canvas + grain ---------- */
+
+#paint {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  display: block;
+}
+
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 0.9s steps(4) infinite;
+}
+
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2%, 3%); }
+  50% { transform: translate(3%, -2%); }
+  75% { transform: translate(-3%, -3%); }
+  100% { transform: translate(2%, 2%); }
+}
+
+/* ---------- loader ---------- */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.loader__line { opacity: 0; color: var(--paper); }
+.loader__line--sub { color: var(--paper-dim); font-size: 0.62rem; }
+
+/* ---------- slate HUD ---------- */
+
+.hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem var(--space) 0.9rem;
+  color: var(--paper-dim);
+  mix-blend-mode: difference;
+}
+
+.hud__brand { color: var(--paper); letter-spacing: 0.26em; }
+.hud__center { text-align: center; }
+.hud__right { text-align: right; font-variant-numeric: tabular-nums; }
+
+.hud__progress {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+
+#hud-bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--paper);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+/* ---------- chapters ---------- */
+
+.chapter {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: clamp(6rem, 14vh, 9rem) var(--space);
+  position: relative;
+}
+
+.chapter__inner {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+}
+
+.slate {
+  color: var(--accent);
+  margin-bottom: clamp(1.5rem, 3vh, 2.5rem);
+  display: inline-block;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--hairline);
+  transition: color 0.9s ease;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 6.2vw, 5.4rem);
+  line-height: 1.06;
+  letter-spacing: 0.005em;
+  max-width: 18ch;
+  text-wrap: balance;
+}
+
+.title--hero { font-size: clamp(2.8rem, 7.4vw, 6.6rem); }
+
+.title .w { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.title .w > span { display: inline-block; will-change: transform; }
+
+.lede {
+  margin-top: clamp(1.6rem, 3.5vh, 2.6rem);
+  font-size: clamp(1rem, 1.45vw, 1.22rem);
+  line-height: 1.75;
+  max-width: 56ch;
+  color: var(--paper-dim);
+}
+
+/* ---------- detail rows ---------- */
+
+.rows {
+  list-style: none;
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+  border-top: 1px solid var(--hairline);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 14rem) 1fr;
+  gap: 1.5rem;
+  padding: 1.35rem 0;
+  border-bottom: 1px solid var(--hairline);
+  align-items: baseline;
+}
+
+.row__label { color: var(--accent); transition: color 0.9s ease; }
+.row__text {
+  font-size: clamp(0.95rem, 1.25vw, 1.1rem);
+  line-height: 1.6;
+  color: var(--paper-dim);
+}
+
+/* ---------- work grid ---------- */
+
+.grid {
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--hairline);
+  border: 1px solid var(--hairline);
+}
+
+.card {
+  background: rgba(7, 7, 12, 0.35);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  padding: clamp(1.6rem, 3vw, 2.6rem);
+  transition: background 0.5s ease;
+}
+
+.card:hover { background: rgba(7, 7, 12, 0.62); }
+
+.card__index {
+  color: var(--accent);
+  display: block;
+  margin-bottom: 1.4rem;
+  transition: color 0.9s ease;
+}
+
+.card__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  margin-bottom: 0.7rem;
+}
+
+.card__text {
+  color: var(--paper-dim);
+  line-height: 1.65;
+  font-size: 0.98rem;
+}
+
+/* ---------- scroll cue ---------- */
+
+.scrollcue {
+  margin-top: clamp(3rem, 9vh, 5.5rem);
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  color: var(--paper-dim);
+}
+
+.scrollcue .mono { font-size: 0.62rem; }
+
+.scrollcue__line {
+  width: 4.5rem;
+  height: 1px;
+  background: var(--paper-dim);
+  transform-origin: left center;
+  animation: cue 2.4s ease-in-out infinite;
+}
+
+@keyframes cue {
+  0%, 100% { transform: scaleX(0.35); opacity: 0.4; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
+/* ---------- credits / CTA ---------- */
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: clamp(2.2rem, 5vh, 3.4rem);
+  padding: 1.05rem 1.8rem;
+  border: 1px solid var(--accent);
+  color: var(--paper);
+  text-decoration: none;
+  transition: background 0.45s ease, color 0.45s ease, border-color 0.9s ease;
+}
+
+.cta:hover, .cta:focus-visible {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.cta__arrow { font-family: var(--font-body); transition: transform 0.45s ease; }
+.cta:hover .cta__arrow { transform: translateX(0.35rem); }
+
+.credits {
+  margin-top: clamp(4rem, 12vh, 7rem);
+  padding-top: 2.2rem;
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  font-size: 0.92rem;
+  color: var(--paper-dim);
+}
+
+.credits__col { display: flex; flex-direction: column; gap: 0.45rem; }
+.credits__col a { text-decoration: none; }
+.credits__col a:hover { color: var(--paper); text-decoration: underline; }
+
+.credits__head { color: var(--accent); margin-bottom: 0.4rem; font-size: 0.62rem; transition: color 0.9s ease; }
+
+.credits__legal {
+  grid-column: 1 / -1;
+  margin-top: 2.4rem;
+  font-size: 0.6rem;
+  color: rgba(242, 237, 228, 0.38);
+}
+
+/* ---------- a11y + responsive ---------- */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+@media (max-width: 760px) {
+  .hud { grid-template-columns: 1fr auto; }
+  .hud__center { display: none; }
+  .grid { grid-template-columns: 1fr; }
+  .row { grid-template-columns: 1fr; gap: 0.5rem; }
+  .credits { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain, .scrollcue__line { animation: none; }
+  .reveal, .title .w > span { opacity: 1 !important; transform: none !important; }
+}
+</style>
+
+<noscript>
+<style>
+  .loader { display: none; }
+  body { background: #0d0b14; }
+</style>
+</noscript>
 </head>
 <body data-chapter="0">
 
-  <!-- ============ LOADER ============ -->
-  <div class="loader" id="loader" aria-hidden="true">
-    <p class="loader__line mono">EVERYTHING MEDIA</p>
-    <p class="loader__line loader__line--sub mono">PRESENTS</p>
+<!-- ============ LOADER ============ -->
+<div class="loader" id="loader" aria-hidden="true">
+  <p class="loader__line mono">EVERYTHING MEDIA</p>
+  <p class="loader__line loader__line--sub mono">PRESENTS</p>
+</div>
+
+<!-- ============ WEBGL PAINT ============ -->
+<canvas id="paint" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ SLATE HUD ============ -->
+<header class="hud">
+  <div class="hud__left mono">
+    <span class="hud__brand">EVERYTHING&nbsp;MEDIA</span>
   </div>
+  <div class="hud__center mono">
+    <span id="hud-scene">SC&nbsp;01&nbsp;·&nbsp;PROLOGUE</span>
+  </div>
+  <div class="hud__right mono">
+    <span id="hud-timecode">00:00:00:00</span>
+  </div>
+  <div class="hud__progress"><span id="hud-bar"></span></div>
+</header>
 
-  <!-- ============ WEBGL PAINT ============ -->
-  <canvas id="paint" aria-hidden="true"></canvas>
-  <div class="grain" aria-hidden="true"></div>
+<main id="film">
 
-  <!-- ============ SLATE HUD (signature) ============ -->
-  <header class="hud" aria-hidden="false">
-    <div class="hud__left mono">
-      <span class="hud__brand">EVERYTHING&nbsp;MEDIA</span>
+  <!-- ============ PROLOGUE ============ -->
+  <section class="chapter chapter--prologue" data-chapter="0" data-scene="SC 01 · PROLOGUE">
+    <div class="chapter__inner">
+      <p class="slate mono reveal">SCENE 01 &nbsp;·&nbsp; EXT. THE DARK — NIGHT</p>
+      <h1 class="title title--hero split">Every great film begins in the dark.</h1>
+      <p class="lede reveal">
+        Everything Media is a cinematic AI production studio.
+        We direct machines the way crews direct cameras —
+        and put stories on screen that audiences feel before they question.
+      </p>
+      <div class="scrollcue reveal" aria-hidden="true">
+        <span class="mono">SCROLL TO ROLL CAMERA</span>
+        <span class="scrollcue__line"></span>
+      </div>
     </div>
-    <div class="hud__center mono">
-      <span id="hud-scene">SC&nbsp;01&nbsp;·&nbsp;PROLOGUE</span>
-    </div>
-    <div class="hud__right mono">
-      <span id="hud-timecode">00:00:00:00</span>
-    </div>
-    <div class="hud__progress"><span id="hud-bar"></span></div>
-  </header>
+  </section>
 
-  <main id="film">
+  <!-- ============ CHAPTER 01 — CRAFT ============ -->
+  <section class="chapter" data-chapter="1" data-scene="CH 01 · CRAFT">
+    <div class="chapter__inner">
+      <p class="slate mono reveal">CHAPTER 01 &nbsp;·&nbsp; CRAFT</p>
+      <h2 class="title split">A hundred years of Indian cinema lives in our eyes.</h2>
+      <p class="lede reveal">
+        Framing. Light. Rhythm. Emotion played at full volume and meant completely.
+        We grew up inside this grammar — so when we prompt, we aren't gambling.
+        We're directing.
+      </p>
+      <ul class="rows">
+        <li class="row reveal">
+          <span class="row__label mono">DIRECTION</span>
+          <span class="row__text">Story first. Every frame answers to the script, not the model.</span>
+        </li>
+        <li class="row reveal">
+          <span class="row__label mono">CINEMATOGRAPHY</span>
+          <span class="row__text">Motivated light, deliberate lenses, blocking that means something.</span>
+        </li>
+        <li class="row reveal">
+          <span class="row__label mono">EDIT &amp; SOUND</span>
+          <span class="row__text">Cut to feeling. Sound and image always pulling the same direction.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
 
-    <!-- ============ PROLOGUE ============ -->
-    <section class="chapter chapter--prologue" data-chapter="0" data-scene="SC 01 · PROLOGUE">
-      <div class="chapter__inner">
-        <p class="slate mono reveal">SCENE 01 &nbsp;·&nbsp; EXT. THE DARK — NIGHT</p>
-        <h1 class="title title--hero split">Every great film begins in the dark.</h1>
-        <p class="lede reveal">
-          Everything Media is a cinematic AI production studio.
-          We direct machines the way crews direct cameras —
-          and put stories on screen that audiences feel before they question.
-        </p>
-        <div class="scrollcue reveal" aria-hidden="true">
-          <span class="mono">SCROLL TO ROLL CAMERA</span>
-          <span class="scrollcue__line"></span>
+  <!-- ============ CHAPTER 02 — THE MACHINE ============ -->
+  <section class="chapter" data-chapter="2" data-scene="CH 02 · THE MACHINE">
+    <div class="chapter__inner">
+      <p class="slate mono reveal">CHAPTER 02 &nbsp;·&nbsp; THE MACHINE</p>
+      <h2 class="title split">Then we hand that craft a machine that never sleeps.</h2>
+      <p class="lede reveal">
+        Generative video, image and sound pipelines — tuned, chained and quality-controlled
+        shot by shot. Worlds that once needed soundstages and crores now need
+        a director's eye and a few relentless weeks.
+      </p>
+      <ul class="rows">
+        <li class="row reveal">
+          <span class="row__label mono">WORLDBUILDING</span>
+          <span class="row__text">Any era, any planet, any impossible camera move — rendered, not faked.</span>
+        </li>
+        <li class="row reveal">
+          <span class="row__label mono">CONSISTENCY</span>
+          <span class="row__text">Characters, sets and light held steady across every cut.</span>
+        </li>
+        <li class="row reveal">
+          <span class="row__label mono">VELOCITY</span>
+          <span class="row__text">Concept to final film in weeks. Revisions in days, not months.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ CHAPTER 03 — THE WORK ============ -->
+  <section class="chapter" data-chapter="3" data-scene="CH 03 · THE WORK">
+    <div class="chapter__inner">
+      <p class="slate mono reveal">CHAPTER 03 &nbsp;·&nbsp; THE WORK</p>
+      <h2 class="title split">Four ways we put it on screen.</h2>
+      <div class="grid">
+        <article class="card reveal">
+          <span class="card__index mono">A</span>
+          <h3 class="card__title">Brand Films</h3>
+          <p class="card__text">Cinematic campaigns for brands that refuse to look like ads.</p>
+        </article>
+        <article class="card reveal">
+          <span class="card__index mono">B</span>
+          <h3 class="card__title">Motion &amp; VFX</h3>
+          <p class="card__text">Product shots, title sequences and effects with painterly precision.</p>
+        </article>
+        <article class="card reveal">
+          <span class="card__index mono">C</span>
+          <h3 class="card__title">Music Videos</h3>
+          <p class="card__text">Visual worlds built around a track's pulse, not pasted over it.</p>
+        </article>
+        <article class="card reveal">
+          <span class="card__index mono">D</span>
+          <h3 class="card__title">Trailers &amp; IP</h3>
+          <p class="card__text">Teasers, pilots and proof-of-concept films for stories that deserve scale.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CHAPTER 04 — THE STUDIO ============ -->
+  <section class="chapter" data-chapter="4" data-scene="CH 04 · THE STUDIO">
+    <div class="chapter__inner">
+      <p class="slate mono reveal">CHAPTER 04 &nbsp;·&nbsp; THE STUDIO</p>
+      <h2 class="title split">A small studio with an art department the size of the cloud.</h2>
+      <p class="lede reveal">
+        Four founders. One studio in Delhi. Clients across the US, UK, UAE and India.
+        We stay small on purpose — taste doesn't scale by headcount,
+        and every project here is touched by the people whose names are on it.
+      </p>
+      <ul class="rows">
+        <li class="row reveal">
+          <span class="row__label mono">CREATIVE</span>
+          <span class="row__text">Direction, writing and design held to a feature-film bar.</span>
+        </li>
+        <li class="row reveal">
+          <span class="row__label mono">TECHNOLOGY</span>
+          <span class="row__text">Custom AI pipelines built in-house, retired the moment something better exists.</span>
+        </li>
+        <li class="row reveal">
+          <span class="row__label mono">PRODUCTION</span>
+          <span class="row__text">One point of contact, honest timelines, finals that arrive finished.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ CREDITS ============ -->
+  <section class="chapter chapter--credits" data-chapter="5" data-scene="END · CREDITS">
+    <div class="chapter__inner">
+      <p class="slate mono reveal">END &nbsp;·&nbsp; CREDITS</p>
+      <h2 class="title split">Your story. Rolling soon.</h2>
+      <p class="lede reveal">
+        If you have a brand, a track, a script or just a sentence that won't leave you alone —
+        send it. We'll tell you honestly what it could become.
+      </p>
+      <a class="cta reveal" href="mailto:hello@everythingmedia.studio">
+        <span class="mono">START A PROJECT</span>
+        <span class="cta__arrow" aria-hidden="true">→</span>
+      </a>
+
+      <footer class="credits reveal">
+        <div class="credits__col">
+          <span class="mono credits__head">STUDIO</span>
+          <span>Everything Media</span>
+          <span>New Delhi, India</span>
         </div>
-      </div>
-    </section>
-
-    <!-- ============ CHAPTER 01 — CRAFT ============ -->
-    <section class="chapter" data-chapter="1" data-scene="CH 01 · CRAFT">
-      <div class="chapter__inner">
-        <p class="slate mono reveal">CHAPTER 01 &nbsp;·&nbsp; CRAFT</p>
-        <h2 class="title split">A hundred years of Indian cinema lives in our eyes.</h2>
-        <p class="lede reveal">
-          Framing. Light. Rhythm. Emotion played at full volume and meant completely.
-          We grew up inside this grammar — so when we prompt, we aren't gambling.
-          We're directing.
-        </p>
-        <ul class="rows">
-          <li class="row reveal">
-            <span class="row__label mono">DIRECTION</span>
-            <span class="row__text">Story first. Every frame answers to the script, not the model.</span>
-          </li>
-          <li class="row reveal">
-            <span class="row__label mono">CINEMATOGRAPHY</span>
-            <span class="row__text">Motivated light, deliberate lenses, blocking that means something.</span>
-          </li>
-          <li class="row reveal">
-            <span class="row__label mono">EDIT &amp; SOUND</span>
-            <span class="row__text">Cut to feeling. Sound and image always pulling the same direction.</span>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ============ CHAPTER 02 — THE MACHINE ============ -->
-    <section class="chapter" data-chapter="2" data-scene="CH 02 · THE MACHINE">
-      <div class="chapter__inner">
-        <p class="slate mono reveal">CHAPTER 02 &nbsp;·&nbsp; THE MACHINE</p>
-        <h2 class="title split">Then we hand that craft a machine that never sleeps.</h2>
-        <p class="lede reveal">
-          Generative video, image and sound pipelines — tuned, chained and quality-controlled
-          shot by shot. Worlds that once needed soundstages and crores now need
-          a director's eye and a few relentless weeks.
-        </p>
-        <ul class="rows">
-          <li class="row reveal">
-            <span class="row__label mono">WORLDBUILDING</span>
-            <span class="row__text">Any era, any planet, any impossible camera move — rendered, not faked.</span>
-          </li>
-          <li class="row reveal">
-            <span class="row__label mono">CONSISTENCY</span>
-            <span class="row__text">Characters, sets and light held steady across every cut.</span>
-          </li>
-          <li class="row reveal">
-            <span class="row__label mono">VELOCITY</span>
-            <span class="row__text">Concept to final film in weeks. Revisions in days, not months.</span>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ============ CHAPTER 03 — THE WORK ============ -->
-    <section class="chapter" data-chapter="3" data-scene="CH 03 · THE WORK">
-      <div class="chapter__inner">
-        <p class="slate mono reveal">CHAPTER 03 &nbsp;·&nbsp; THE WORK</p>
-        <h2 class="title split">Four ways we put it on screen.</h2>
-        <div class="grid">
-          <article class="card reveal">
-            <span class="card__index mono">A</span>
-            <h3 class="card__title">Brand Films</h3>
-            <p class="card__text">Cinematic campaigns for brands that refuse to look like ads.</p>
-          </article>
-          <article class="card reveal">
-            <span class="card__index mono">B</span>
-            <h3 class="card__title">Motion &amp; VFX</h3>
-            <p class="card__text">Product shots, title sequences and effects with painterly precision.</p>
-          </article>
-          <article class="card reveal">
-            <span class="card__index mono">C</span>
-            <h3 class="card__title">Music Videos</h3>
-            <p class="card__text">Visual worlds built around a track's pulse, not pasted over it.</p>
-          </article>
-          <article class="card reveal">
-            <span class="card__index mono">D</span>
-            <h3 class="card__title">Trailers &amp; IP</h3>
-            <p class="card__text">Teasers, pilots and proof-of-concept films for stories that deserve scale.</p>
-          </article>
+        <div class="credits__col">
+          <span class="mono credits__head">SERVICES</span>
+          <span>Brand Films · Motion &amp; VFX</span>
+          <span>Music Videos · Trailers &amp; IP</span>
         </div>
-      </div>
-    </section>
+        <div class="credits__col">
+          <span class="mono credits__head">CONTACT</span>
+          <a href="mailto:hello@everythingmedia.studio">hello@everythingmedia.studio</a>
+        </div>
+        <p class="credits__legal mono">© 2026 EVERYTHING MEDIA — ALL FRAMES RESERVED</p>
+      </footer>
+    </div>
+  </section>
 
-    <!-- ============ CHAPTER 04 — THE STUDIO ============ -->
-    <section class="chapter" data-chapter="4" data-scene="CH 04 · THE STUDIO">
-      <div class="chapter__inner">
-        <p class="slate mono reveal">CHAPTER 04 &nbsp;·&nbsp; THE STUDIO</p>
-        <h2 class="title split">A small studio with an art department the size of the cloud.</h2>
-        <p class="lede reveal">
-          Four founders. One floor in Delhi. Clients across the US, UK, UAE and India.
-          We stay small on purpose — taste doesn't scale by headcount,
-          and every project here is touched by the people whose names are on it.
-        </p>
-        <ul class="rows">
-          <li class="row reveal">
-            <span class="row__label mono">CREATIVE</span>
-            <span class="row__text">Direction, writing and design held to a feature-film bar.</span>
-          </li>
-          <li class="row reveal">
-            <span class="row__label mono">TECHNOLOGY</span>
-            <span class="row__text">Custom AI pipelines built in-house, retired the moment something better exists.</span>
-          </li>
-          <li class="row reveal">
-            <span class="row__label mono">PRODUCTION</span>
-            <span class="row__text">One point of contact, honest timelines, finals that arrive finished.</span>
-          </li>
-        </ul>
-      </div>
-    </section>
+</main>
 
-    <!-- ============ CREDITS ============ -->
-    <section class="chapter chapter--credits" data-chapter="5" data-scene="END · CREDITS">
-      <div class="chapter__inner">
-        <p class="slate mono reveal">END &nbsp;·&nbsp; CREDITS</p>
-        <h2 class="title split">Your story. Rolling soon.</h2>
-        <p class="lede reveal">
-          If you have a brand, a track, a script or just a sentence that won't leave you alone —
-          send it. We'll tell you honestly what it could become.
-        </p>
-        <a class="cta reveal" href="mailto:hello@everythingmedia.studio">
-          <span class="mono">START A PROJECT</span>
-          <span class="cta__arrow" aria-hidden="true">→</span>
-        </a>
+<!-- ============ LIBRARIES (CDN, with fallback guards in code) ============ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
 
-        <footer class="credits reveal">
-          <div class="credits__col">
-            <span class="mono credits__head">STUDIO</span>
-            <span>Everything Media</span>
-            <span>New Delhi, India</span>
-          </div>
-          <div class="credits__col">
-            <span class="mono credits__head">SERVICES</span>
-            <span>Brand Films · Motion &amp; VFX</span>
-            <span>Music Videos · Trailers &amp; IP</span>
-          </div>
-          <div class="credits__col">
-            <span class="mono credits__head">CONTACT</span>
-            <a href="mailto:hello@everythingmedia.studio">hello@everythingmedia.studio</a>
-          </div>
-          <p class="credits__legal mono">© 2026 EVERYTHING MEDIA — ALL FRAMES RESERVED</p>
-        </footer>
-      </div>
-    </section>
+<script>
+/* ==========================================================================
+   PAINTED INK BACKGROUND (Three.js) — colors bleed between chapters,
+   cursor stirs the paint. Fails silently to a solid ink background.
+   ========================================================================== */
+(function () {
+  "use strict";
 
-  </main>
+  var canvas = document.getElementById("paint");
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  <!-- ============ LIBRARIES (CDN) ============ -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+  if (!window.THREE || !window.WebGLRenderingContext) {
+    canvas.style.display = "none";
+    window.EM_BG = { setProgress: function () {} };
+    return;
+  }
 
-  <!-- ============ SITE ============ -->
-  <script src="js/background.js"></script>
-  <script src="js/main.js"></script>
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, powerPreference: "high-performance" });
+  } catch (e) {
+    canvas.style.display = "none";
+    window.EM_BG = { setProgress: function () {} };
+    return;
+  }
+
+  var DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+  renderer.setPixelRatio(DPR);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+  /* chapter palettes: [deep base, paint mid, accent glow] */
+  var PALETTES = [
+    ["#07070c", "#15151f", "#f2ede4"], // prologue — ink & projector white
+    ["#1c0a08", "#5c1a12", "#d9a441"], // craft — lacquer red & old gold
+    ["#06181b", "#0e3a40", "#8fe0d6"], // machine — petrol & signal teal
+    ["#120d24", "#2c1e55", "#b79cff"], // work — indigo & violet
+    ["#1e1208", "#4a2e14", "#e8b96b"], // studio — amber dusk
+    ["#08080d", "#14121c", "#f2ede4"]  // credits — back to ink
+  ].map(function (p) { return p.map(function (hex) { return new THREE.Color(hex); }); });
+
+  var uniforms = {
+    uTime:  { value: 0 },
+    uRes:   { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+    uStir:  { value: 0 },
+    uDeep:  { value: PALETTES[0][0].clone() },
+    uMid:   { value: PALETTES[0][1].clone() },
+    uGlow:  { value: PALETTES[0][2].clone() }
+  };
+
+  var material = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: "void main(){ gl_Position = vec4(position, 1.0); }",
+    fragmentShader: [
+      "precision highp float;",
+      "uniform float uTime;",
+      "uniform vec2  uRes;",
+      "uniform vec2  uMouse;",
+      "uniform float uStir;",
+      "uniform vec3  uDeep;",
+      "uniform vec3  uMid;",
+      "uniform vec3  uGlow;",
+      "float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }",
+      "float noise(vec2 p){",
+      "  vec2 i = floor(p); vec2 f = fract(p);",
+      "  vec2 u = f * f * (3.0 - 2.0 * f);",
+      "  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),",
+      "             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);",
+      "}",
+      "float fbm(vec2 p){",
+      "  float v = 0.0; float a = 0.5;",
+      "  mat2 rot = mat2(0.8, -0.6, 0.6, 0.8);",
+      "  for (int i = 0; i < 5; i++){ v += a * noise(p); p = rot * p * 2.05; a *= 0.5; }",
+      "  return v;",
+      "}",
+      "void main(){",
+      "  vec2 uv = gl_FragCoord.xy / uRes;",
+      "  vec2 p = uv; p.x *= uRes.x / uRes.y;",
+      "  float t = uTime * 0.045;",
+      "  vec2 m = uMouse; m.x *= uRes.x / uRes.y;",
+      "  vec2 toM = p - m;",
+      "  float dM = length(toM);",
+      "  float influence = exp(-dM * 3.2) * (0.35 + uStir * 1.4);",
+      "  float ang = influence * 2.4;",
+      "  mat2 swirl = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));",
+      "  vec2 q = m + swirl * toM;",
+      "  vec2 w1 = vec2(fbm(q * 1.6 + t), fbm(q * 1.6 - t * 0.7 + 4.2));",
+      "  vec2 w2 = vec2(fbm(q * 2.2 + 2.4 * w1 + t * 0.5), fbm(q * 2.2 + 2.4 * w1 - t * 0.3 + 8.9));",
+      "  float paint = fbm(q * 1.4 + 2.6 * w2);",
+      "  vec3 col = mix(uDeep, uMid, smoothstep(0.28, 0.78, paint));",
+      "  float vein = smoothstep(0.62, 0.92, fbm(q * 2.8 + w2 * 3.0 + t));",
+      "  col = mix(col, uGlow, vein * 0.22);",
+      "  col += uGlow * influence * 0.10;",
+      "  float vig = smoothstep(1.25, 0.35, distance(uv, vec2(0.5)));",
+      "  col *= mix(0.72, 1.0, vig);",
+      "  gl_FragColor = vec4(col, 1.0);",
+      "}"
+    ].join("\n")
+  });
+
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+
+  var progress = 0;
+  var deepT = new THREE.Color(), midT = new THREE.Color(), glowT = new THREE.Color();
+
+  function paletteAt(p) {
+    var segs = PALETTES.length - 1;
+    var f = Math.min(Math.max(p, 0), 1) * segs;
+    var i = Math.min(Math.floor(f), segs - 1);
+    var k = f - i;
+    deepT.copy(PALETTES[i][0]).lerp(PALETTES[i + 1][0], k);
+    midT.copy(PALETTES[i][1]).lerp(PALETTES[i + 1][1], k);
+    glowT.copy(PALETTES[i][2]).lerp(PALETTES[i + 1][2], k);
+  }
+
+  window.EM_BG = { setProgress: function (p) { progress = p; } };
+
+  var mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, vel: 0 };
+
+  window.addEventListener("pointermove", function (e) {
+    var nx = e.clientX / window.innerWidth;
+    var ny = 1.0 - e.clientY / window.innerHeight;
+    mouse.vel = Math.min(1, mouse.vel + Math.hypot(nx - mouse.tx, ny - mouse.ty) * 14);
+    mouse.tx = nx; mouse.ty = ny;
+  }, { passive: true });
+
+  window.addEventListener("resize", function () {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    uniforms.uRes.value.set(window.innerWidth, window.innerHeight);
+  });
+
+  var clock = new THREE.Clock();
+
+  function frame() {
+    requestAnimationFrame(frame);
+    var dt = clock.getDelta();
+    uniforms.uTime.value += reduceMotion ? dt * 0.15 : dt;
+
+    mouse.x += (mouse.tx - mouse.x) * 0.06;
+    mouse.y += (mouse.ty - mouse.y) * 0.06;
+    mouse.vel *= 0.94;
+    uniforms.uMouse.value.set(mouse.x, mouse.y);
+    uniforms.uStir.value += ((reduceMotion ? 0 : mouse.vel) - uniforms.uStir.value) * 0.08;
+
+    paletteAt(progress);
+    uniforms.uDeep.value.lerp(deepT, 0.05);
+    uniforms.uMid.value.lerp(midT, 0.05);
+    uniforms.uGlow.value.lerp(glowT, 0.05);
+
+    renderer.render(scene, camera);
+  }
+  frame();
+})();
+</script>
+
+<script>
+/* ==========================================================================
+   MAIN — Lenis smooth scroll + GSAP ScrollTrigger scenes + slate HUD.
+   Every block is guarded: if any library fails to load,
+   the site still renders fully styled with all content visible.
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var hasGSAP = !!(window.gsap && window.ScrollTrigger);
+  var loader = document.getElementById("loader");
+
+  /* ---------- no-GSAP safety: show everything, drop the loader ---------- */
+  if (!hasGSAP) {
+    if (loader) loader.remove();
+    return; // content is fully visible by default — design intact, just without animation
+  }
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ------------------------------------------------------------------
+     1. LENIS — buttery scroll wired into GSAP's ticker
+  ------------------------------------------------------------------ */
+  if (!reduceMotion && window.Lenis) {
+    var lenis = new Lenis({
+      duration: 1.25,
+      easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+      smoothWheel: true,
+      touchMultiplier: 1.4
+    });
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add(function (time) { lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  /* ------------------------------------------------------------------
+     2. SPLIT TITLES — wrap each word for masked reveals
+  ------------------------------------------------------------------ */
+  document.querySelectorAll(".split").forEach(function (el) {
+    var words = el.textContent.trim().split(/\s+/);
+    el.textContent = "";
+    words.forEach(function (word, i) {
+      var w = document.createElement("span");
+      w.className = "w";
+      var inner = document.createElement("span");
+      inner.textContent = word;
+      w.appendChild(inner);
+      el.appendChild(w);
+      if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
+    });
+  });
+
+  /* ------------------------------------------------------------------
+     3. CHAPTER ACCENTS — CSS accent + HUD scene follow the chapter
+  ------------------------------------------------------------------ */
+  var ACCENTS = ["#f2ede4", "#d9a441", "#8fe0d6", "#b79cff", "#e8b96b", "#f2ede4"];
+  var chapters = gsap.utils.toArray(".chapter");
+  var hudScene = document.getElementById("hud-scene");
+
+  function setChapter(index, sceneLabel) {
+    gsap.to(document.documentElement, {
+      "--accent": ACCENTS[index] || ACCENTS[0],
+      duration: 1.1,
+      ease: "power2.out"
+    });
+    if (sceneLabel && hudScene) hudScene.textContent = sceneLabel;
+  }
+
+  chapters.forEach(function (section, i) {
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top 55%",
+      end: "bottom 55%",
+      onEnter: function () { setChapter(i, section.dataset.scene); },
+      onEnterBack: function () { setChapter(i, section.dataset.scene); }
+    });
+  });
+
+  /* ------------------------------------------------------------------
+     4. SCENE ANIMATIONS — each chapter enters like a cut
+  ------------------------------------------------------------------ */
+  if (!reduceMotion) {
+    chapters.forEach(function (section, i) {
+      var words = section.querySelectorAll(".title .w > span");
+      var reveals = section.querySelectorAll(".reveal");
+
+      gsap.set(words, { yPercent: 110 });
+      gsap.set(reveals, { autoAlpha: 0, y: 36 });
+
+      // gentle parallax drift while the chapter scrolls through
+      gsap.fromTo(section.querySelector(".chapter__inner"),
+        { y: 0 },
+        {
+          y: -40,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: i === 0 ? "top top" : "top bottom",
+            end: "bottom top",
+            scrub: true
+          }
+        });
+
+      // the prologue's entrance belongs to the loader sequence
+      if (i === 0) return;
+
+      var tl = gsap.timeline({
+        scrollTrigger: { trigger: section, start: "top 72%", once: true }
+      });
+
+      tl.to(words, { yPercent: 0, duration: 1.15, ease: "power4.out", stagger: 0.055 }, 0);
+      tl.to(reveals, { autoAlpha: 1, y: 0, duration: 1.0, ease: "power3.out", stagger: 0.09 }, 0.25);
+    });
+  }
+
+  /* ------------------------------------------------------------------
+     5. GLOBAL PROGRESS — paint bleed, timecode, progress bar
+  ------------------------------------------------------------------ */
+  var timecodeEl = document.getElementById("hud-timecode");
+  var barEl = document.getElementById("hud-bar");
+  var RUNTIME_FRAMES = 4 * 60 * 24; // fictional 4-minute film @ 24fps
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+  function formatTimecode(p) {
+    var total = Math.round(p * RUNTIME_FRAMES);
+    var fr = total % 24;
+    var s = Math.floor(total / 24) % 60;
+    var m = Math.floor(total / (24 * 60)) % 60;
+    return "00:" + pad(m) + ":" + pad(s) + ":" + pad(fr);
+  }
+
+  ScrollTrigger.create({
+    trigger: document.body,
+    start: "top top",
+    end: "bottom bottom",
+    onUpdate: function (self) {
+      var p = self.progress;
+      if (window.EM_BG) window.EM_BG.setProgress(p);
+      if (timecodeEl) timecodeEl.textContent = formatTimecode(p);
+      if (barEl) barEl.style.transform = "scaleX(" + p + ")";
+    }
+  });
+
+  /* ------------------------------------------------------------------
+     6. LOADER — title card, then open the curtains
+  ------------------------------------------------------------------ */
+  var filmOpened = false;
+
+  function openFilm() {
+    if (filmOpened) return;
+    filmOpened = true;
+
+    if (reduceMotion) {
+      if (loader) loader.remove();
+      return;
+    }
+
+    var heroWords = document.querySelectorAll(".chapter--prologue .title .w > span");
+    var heroReveals = document.querySelectorAll(".chapter--prologue .reveal");
+
+    gsap.timeline()
+      .to(".loader__line", { opacity: 1, duration: 0.7, stagger: 0.25, ease: "power2.out" })
+      .to(".loader__line", { opacity: 0, duration: 0.5, delay: 0.55, ease: "power2.in" })
+      .to(loader, {
+        autoAlpha: 0,
+        duration: 0.8,
+        ease: "power2.inOut",
+        onComplete: function () { if (loader) loader.remove(); }
+      })
+      .to(heroWords, { yPercent: 0, duration: 1.2, ease: "power4.out", stagger: 0.06 }, "-=0.35")
+      .to(heroReveals, { autoAlpha: 1, y: 0, duration: 1.0, ease: "power3.out", stagger: 0.12 }, "-=0.8");
+  }
+
+  if (document.readyState === "complete") {
+    openFilm();
+  } else {
+    window.addEventListener("load", openFilm);
+  }
+
+  // Safety: never trap the user behind the loader.
+  setTimeout(openFilm, 3500);
+})();
+</script>
+
 </body>
 </html>
